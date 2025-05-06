@@ -100,7 +100,7 @@ def index():
                     const encoded = stringToHex(userInput);
                     const doubleEncoded = encoded;
 
-                    const subdomain = `${encoded}.${doubleEncoded}.mything.com`;
+                    const subdomain = `${encoded}.${doubleEncoded}.eldest-cicily-velocrypt-e670e25b.koyeb.app/`;
 
                     // For viewing the generated object
                     const data = {
