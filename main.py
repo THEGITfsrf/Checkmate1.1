@@ -3,7 +3,7 @@ import httpx
 import string
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = 'mything.com'
+app.config['SERVER_NAME'] = 'eldest-cicily-velocrypt-e670e25b.koyeb.app'
 
 
 def decodex(hex_str):
@@ -23,7 +23,7 @@ def extract_subdomains():
     print("Processing request...")
     host = request.host.split(':')[0]  # Split off the port number if present
     parts = host.split('.')  # Split by dot to get subdomains
-    subdomains = parts[:-2]  # Subdomains are all parts except the last two (domain and TLD)
+    subdomains = parts[:-3]  # Subdomains are all parts except the last two (domain and TLD)
 
     print(f"Subdomains extracted: {subdomains}")
 
