@@ -181,5 +181,7 @@ def indexs(path):
         headers=fixed_headers,
         mimetype=resp.headers.get("Content-Type")
     )
-if __name__ == '__main__':
+def main():
     app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == '__main__':
+    main()
