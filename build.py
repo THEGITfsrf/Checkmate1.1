@@ -3,7 +3,7 @@ import shutil
 import platform
 import subprocess
 
-OUTPUT_DIR = ''
+OUTPUT_DIR = input("path")
 
 def ensure_output_dir():
     if not os.path.exists(OUTPUT_DIR):
