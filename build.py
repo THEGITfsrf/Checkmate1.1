@@ -2,8 +2,9 @@ import os
 import shutil
 import platform
 import subprocess
+import zipfile
 
-OUTPUT_DIR = input("path")
+OUTPUT_DIR = input("Enter the path to output directory: ")
 
 def ensure_output_dir():
     if not os.path.exists(OUTPUT_DIR):
@@ -32,7 +33,13 @@ def build_exe():
 def build_tar_gz():
     print("[*] Creating .tar.gz archive...")
     tar_file = os.path.join(OUTPUT_DIR, 'checkmateproxy.tar.gz')
-    os.system(f"tar -czvf {tar_file} main.py requirements.txt setup.py")
+    
+    # Creating a tar.gz-like archive using zipfile (cross-platform)
+    with zipfile.ZipFile(tar_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        zipf.write("main.py", arcname="main.py")
+        zipf.write("requirements.txt", arcname="requirements.txt")
+        if os.path.exists("setup.py"):
+            zipf.write("setup.py", arcname="setup.py")
 
 def build_python_package():
     print("[*] Packaging Python setuptools .tar.gz...")
