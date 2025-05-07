@@ -1,9 +1,17 @@
 from flask import Flask, request, g,Response
 import httpx
+import sys
+
 import string
 
 app = Flask(__name__)
-app.config['SERVER_NAME'] = 'eldest-cicily-velocrypt-e670e25b.koyeb.app'
+if len(sys.argv) > 1:
+    app.config['SERVER_NAME'] = sys.argv[1]
+    print(f"SERVER_NAME set to: {app.config['SERVER_NAME']}")
+else:
+    app.config['SERVER_NAME'] = "localhost"  # or some default/fallback
+    print("No SERVER_NAME provided; using default.")
+
 
 
 def decodex(hex_str):
@@ -21,29 +29,35 @@ def decodex(hex_str):
 @app.before_request
 def extract_subdomains():
     print("Processing request...")
-    host = request.host.split(':')[0]  # Split off the port number if present
-    parts = host.split('.')  # Split by dot to get subdomains
-    subdomains = parts[:-3]  # Subdomains are all parts except the last two (domain and TLD)
+    host = request.host.split(':')[0]  # Remove port if present
+    domain_parts = host.split('.')
 
+    # Identify base domain (you could make this more flexible if needed)
+    base_domain_parts = 3  # Example: 'example.com' or 'koyeb.app'
+
+    if len(domain_parts) <= base_domain_parts:
+        g.origin = None
+        g.url_sub = None
+        return
+
+    subdomains = domain_parts[:-base_domain_parts]
     print(f"Subdomains extracted: {subdomains}")
 
     try:
-        if len(subdomains) == 2:
-            print("Decoding two subdomains...")
-            g.origin = decodex(subdomains[0])  # Decode the first subdomain
-            g.url_sub = decodex(subdomains[1])  # Decode the second subdomain
+        if len(subdomains) >= 2:
+            g.origin = decodex(subdomains[0])
+            g.url_sub = decodex(subdomains[1])
         elif len(subdomains) == 1:
-            print("Decoding one subdomain...")
             g.origin = None
-            g.url_sub = decodex(subdomains[0])  # Decode the first subdomain
+            g.url_sub = decodex(subdomains[0])
         else:
             g.origin = None
             g.url_sub = None
-            print("No subdomains found.")
     except Exception as e:
+        print(f"Error decoding: {e}")
         g.origin = None
         g.url_sub = None
-        print(f"Error decoding subdomains: {e}")
+
 
 
 @app.route('/')
@@ -77,42 +91,39 @@ def index():
                 <iframe id="proxyFrame" src=""></iframe>
 
                 <script>
-                function stringToHex(input) {
-                    let hexStr = '';
-                    for (let i = 0; i < input.length; i++) {
-                        hexStr += input.charCodeAt(i).toString(16);
-                    }
-                    return hexStr;
-                }
+function stringToHex(input) {
+    let hexStr = '';
+    for (let i = 0; i < input.length; i++) {
+        hexStr += input.charCodeAt(i).toString(16);
+    }
+    return hexStr;
+}
 
-                function loadIframe() {
-                    let userInput = document.getElementById("urlInput").value.trim();
+function loadIframe() {
+    let userInput = document.getElementById("urlInput").value.trim();
 
-                    if (!userInput) {
-                        alert("Please enter a URL");
-                        return;
-                    }
+    if (!userInput) {
+        alert("Please enter a URL");
+        return;
+    }
 
-                    if (!userInput.startsWith("https://")) {
-                        userInput = "https://" + userInput;
-                    }
+    if (!userInput.startsWith("https://")) {
+        userInput = "https://" + userInput;
+    }
 
-                    const encoded = stringToHex(userInput);
-                    const doubleEncoded = encoded;
+    const encoded = stringToHex(userInput);
+    const doubleEncoded = encoded;  // You could add double encoding if needed
 
-                    const subdomain = `${encoded}.${doubleEncoded}.eldest-cicily-velocrypt-e670e25b.koyeb.app/`;
+    const baseHost = window.location.host.split('.').slice(-3).join('.');
+    const subdomain = `${encoded}.${doubleEncoded}.${baseHost}`;
 
-                    // For viewing the generated object
-                    const data = {
-                        url: subdomain
-                    };
+    document.getElementById("encodedResult").textContent = JSON.stringify({
+        url: subdomain
+    }, null, 2);
 
-                    document.getElementById("encodedResult").textContent = JSON.stringify(data, null, 2);
-
-                    // Update iframe
-                    document.getElementById("proxyFrame").src = "http://" + subdomain + "/";
-                }
-                </script>
+    document.getElementById("proxyFrame").src = "http://" + subdomain + "/";
+}
+</script>
             </body>
             </html>
             '''
