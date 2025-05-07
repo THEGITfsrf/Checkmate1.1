@@ -9,7 +9,7 @@ BUILD_DIR = "dist"
 BUILD_OPTS = ["--onefile", "--clean", "--name", APP_NAME]
 
 # Path to PyInstaller (adjust if necessary)
-PYINSTALLER_PATH = r"C:\Users\safra\AppData\Roaming\Python\Python311\Scripts\pyinstaller.exe"  # Adjust the path to your environment
+PYINSTALLER_PATH = r"C:\Users\safra\AppData\Roaming\Python\Python313\Scripts\pyinstaller.exe"  # Adjust the path to your environment
 
 def clean():
     print("[*] Cleaning old builds...")
