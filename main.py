@@ -33,7 +33,7 @@ def extract_subdomains():
     domain_parts = host.split('.')
 
     # Identify base domain (you could make this more flexible if needed)
-    base_domain_parts = len(domain_parts)  # Example: 'example.com' or 'koyeb.app'
+    base_domain_parts = len(app.config['SERVER_NAME'].split('.'))  # Example: 'example.com' or 'koyeb.app'
 
     if len(domain_parts) <= base_domain_parts:
         g.origin = None
