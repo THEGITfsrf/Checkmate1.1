@@ -3,75 +3,80 @@ import shutil
 import platform
 import subprocess
 
-APP_NAME = "checkmate"
-MAIN_SCRIPT = "main.py"
-BUILD_DIR = "dist"
-BUILD_OPTS = ["--onefile", "--clean", "--name", APP_NAME]
+OUTPUT_DIR = ''
 
-# Path to PyInstaller (adjust if necessary)
-PYINSTALLER_PATH = r"C:\Users\safra\AppData\Roaming\Python\Python313\Scripts\pyinstaller.exe"  # Adjust the path to your environment
+def ensure_output_dir():
+    if not os.path.exists(OUTPUT_DIR):
+        os.makedirs(OUTPUT_DIR)
 
-def clean():
-    print("[*] Cleaning old builds...")
-    for folder in ["build", "dist", "__pycache__"]:
-        if os.path.exists(folder):
-            shutil.rmtree(folder)
-    spec_file = f"{APP_NAME}.spec"
-    if os.path.exists(spec_file):
-        os.remove(spec_file)
-
-def build():
-    print(f"[*] Building {APP_NAME} with PyInstaller...")
-    cmd = [PYINSTALLER_PATH] + BUILD_OPTS + [MAIN_SCRIPT]
-    subprocess.run(cmd, check=True)
-
-def move_output():
-    platform_folder = {
-        "Windows": "windows",
-        "Linux": "linux",
-        "Darwin": "macos"
-    }
+def build_exe():
+    print("[*] Building binary with PyInstaller...")
+    os.system("pyinstaller --onefile main.py")
 
     system = platform.system()
-    target_dir = os.path.join("builds", platform_folder.get(system, "unknown"))
+    binary_name = "main.exe" if system == "Windows" else "main"
+    output_name = "checkmateproxy.exe" if system == "Windows" else "checkmateproxy"
 
-    os.makedirs(target_dir, exist_ok=True)
-
-    binary_name = APP_NAME + (".exe" if system == "Windows" else "")
-    src = os.path.join(BUILD_DIR, binary_name)
-    dest = os.path.join(target_dir, binary_name)
-
-    if os.path.exists(src):
-        shutil.move(src, dest)
-        print(f"[+] Built binary moved to: {dest}")
+    binary_path = os.path.join("dist", binary_name)
+    if os.path.exists(binary_path):
+        shutil.move(binary_path, os.path.join(OUTPUT_DIR, output_name))
     else:
-        print("[!] Build failed or output not found.")
+        print(f"[!] Error: Expected binary not found: {binary_path}")
 
-def create_deb_package():
-    print("[*] Creating .deb package...")
-    cmd = ["fpm", "-s", "dir", "-t", "deb", "--name", APP_NAME, "--version", "1.0", "--architecture", "amd64", "--prefix", "/usr/local", f"--path={BUILD_DIR}/{APP_NAME}"]
-    subprocess.run(cmd, check=True)
+    # Cleanup
+    shutil.rmtree("build", ignore_errors=True)
+    shutil.rmtree("dist", ignore_errors=True)
+    if os.path.exists("main.spec"):
+        os.remove("main.spec")
 
-def create_rpm_package():
-    print("[*] Creating .rpm package...")
-    cmd = ["fpm", "-s", "dir", "-t", "rpm", "--name", APP_NAME, "--version", "1.0", "--architecture", "x86_64", "--prefix", "/usr/local", f"--path={BUILD_DIR}/{APP_NAME}"]
-    subprocess.run(cmd, check=True)
+def build_tar_gz():
+    print("[*] Creating .tar.gz archive...")
+    tar_file = os.path.join(OUTPUT_DIR, 'checkmateproxy.tar.gz')
+    os.system(f"tar -czvf {tar_file} main.py requirements.txt setup.py")
 
-def create_msi_package():
-    print("[*] Creating .msi package...")
-    cmd = ["candle", f"{APP_NAME}.wxs"]  # Requires Wix Toolset (for Windows)
-    subprocess.run(cmd, check=True)
-    cmd = ["light", f"{APP_NAME}.wixobj"]
-    subprocess.run(cmd, check=True)
+def build_python_package():
+    print("[*] Packaging Python setuptools .tar.gz...")
+    if os.path.exists('dist'):
+        shutil.rmtree('dist')
+    os.system("python setup.py sdist")
+    for f in os.listdir('dist'):
+        if f.endswith('.tar.gz'):
+            shutil.move(os.path.join('dist', f), os.path.join(OUTPUT_DIR, f))
+    shutil.rmtree('dist')
 
-if __name__ == "__main__":
-    clean()
-    build()
-    move_output()
+def build_deb():
+    print("[*] Building .deb package...")
+    os.system("fpm -s dir -t deb -n checkmateproxy -v 1.0.0 --prefix /usr/local/bin main.py")
 
-    # Optionally create .deb, .rpm, .msi packages
+def build_rpm():
+    print("[*] Building .rpm package...")
+    os.system("fpm -s dir -t rpm -n checkmateproxy -v 1.0.0 --prefix /usr/local/bin main.py")
+
+def build_msi():
+    print("[*] Building .msi package...")
+    os.system("python -m build")
+    # Adjust this to use msilib or similar tools for Windows
+
+def main():
+    ensure_output_dir()
+    
+    # Build Executable
+    build_exe()
+
+    # Build Archive (tar.gz)
+    build_tar_gz()
+
+    # Build Python Package
+    build_python_package()
+
+    # Build .deb, .rpm, .msi if applicable
     if platform.system() == "Linux":
-        create_deb_package()
-        create_rpm_package()
+        build_deb()
+        build_rpm()
     elif platform.system() == "Windows":
-        create_msi_package()
+        build_msi()
+
+    print(f"\n✅ All outputs are in the '{OUTPUT_DIR}/' folder.")
+
+if __name__ == '__main__':
+    main()
