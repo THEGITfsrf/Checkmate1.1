@@ -1,0 +1,8 @@
+main.py
+setup.py
+checkmate.egg-info/PKG-INFO
+checkmate.egg-info/SOURCES.txt
+checkmate.egg-info/dependency_links.txt
+checkmate.egg-info/entry_points.txt
+checkmate.egg-info/requires.txt
+checkmate.egg-info/top_level.txt
