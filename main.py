@@ -34,7 +34,7 @@ def extract_subdomains():
 
     # Identify base domain (you could make this more flexible if needed)
     base_domain_parts = len(app.config['SERVER_NAME'].split('.'))  # Example: 'example.com' or 'koyeb.app'
-
+    
     if len(domain_parts) <= base_domain_parts:
         g.origin = None
         g.url_sub = None
@@ -50,6 +50,8 @@ def extract_subdomains():
         elif len(subdomains) == 1:
             g.origin = None
             g.url_sub = decodex(subdomains[0])
+            if g.url_sub == "check":
+                g.url_sub == "https://render-production-e2cd.up.railway.app/f22raptor"
         else:
             g.origin = None
             g.url_sub = None
